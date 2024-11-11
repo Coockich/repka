@@ -10,11 +10,11 @@ public class Rope : MonoBehaviour
 
     public HingeJoint2D top;
 
-    public PlayerController player;
+    public NewBehaviorScript player;
     
     void Start()
     {
-        player = GameObject.Find("player-idle-1").GetComponent<PlayerController>();
+        player = GameObject.Find("Child").GetComponent<NewBehaviorScript>();
         //GenerateRope();
     }
 
@@ -60,9 +60,9 @@ public class Rope : MonoBehaviour
         }
         HingeJoint2D newTop = top.gameObject.GetComponent<RopeSegment>().connectedBelow.GetComponent<HingeJoint2D>();
         newTop.connectedBody = hook;
-        newTop.gameObject.transform.position=hook.gameObject.transform.position;
+        newTop.gameObject.transform.position = hook.gameObject.transform.position;
         newTop.GetComponent<RopeSegment>().ResetAnchor();
         Destroy(top.gameObject);
-        top= newTop;
+        top = newTop;
     }
 }

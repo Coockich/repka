@@ -3,23 +3,27 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine.UIElements;
+using System.Threading.Tasks;
+using System.Threading;
 
 public class NewBehaviorScript : MonoBehaviour
 {
     public CharacterController2D controller;
     public float speed = 1f;
     public float jumpforce = 3f;
-    private float jumpcooldown = 0f;
+    private float jumpcooldown = 1.8f;
     float horizontalMove = 0f;
     public Animator animator;
     public Rigidbody2D rb;
     SpriteRenderer sr;
     private HingeJoint2D hj;
+    private Vector3 inputVector;
 
     public float pushForce = 10f;
 
     public bool attached = false;
     public bool running = false;
+    private bool faceRight = true;
     public Transform attachedTo;
     private GameObject disregard;
 
@@ -32,27 +36,32 @@ public class NewBehaviorScript : MonoBehaviour
 
     private void Start()
     {
-        rb =gameObject.GetComponent<Rigidbody2D>();
+        rb = gameObject.GetComponent<Rigidbody2D>();
         sr = gameObject.GetComponent<SpriteRenderer>();
         hj = gameObject.GetComponent<HingeJoint2D>();
     }
-    private void Update()
+    private async void Update()
     {
         CheckKeyboardInputs();
 
         if (isDead)
             return;
 
-        float movement = Input.GetAxis("Horizontal");
+        inputVector.x = Input.GetAxis("Horizontal");
+
+        ReflectPlayer();
+
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            transform.position += new Vector3(movement, 0, 0) * (speed+4) * Time.deltaTime;
-            animator.SetBool("running",true);
+            transform.position += inputVector * (speed + 4) * Time.deltaTime;
+
+            animator.SetBool("running", true);
         }
         else
         {
-            transform.position += new Vector3(movement, 0, 0) * speed * Time.deltaTime;
-            animator.SetBool("running",false);
+            transform.position += inputVector * speed * Time.deltaTime;
+
+            animator.SetBool("running", false);
         }
 
         if (jumpcooldown > 0f)
@@ -62,9 +71,10 @@ public class NewBehaviorScript : MonoBehaviour
 
         if ((Input.GetKey(KeyCode.UpArrow)||Input.GetKeyDown(KeyCode.Space)||Input.GetKeyDown(KeyCode.W)) && Mathf.Abs(rb.velocity.y) < 0.05f && jumpcooldown <= 0f)
         {
-            rb.AddForce(new Vector2(0, jumpforce), ForceMode2D.Impulse);
-            jumpcooldown = 1.2f;
             animator.SetBool("isjumping", true);
+            jumpcooldown = 1.8f;
+            await Task.Delay(500);
+            rb.AddForce(new Vector2(0, jumpforce), ForceMode2D.Impulse);
         }
         else
         {
@@ -73,14 +83,30 @@ public class NewBehaviorScript : MonoBehaviour
         }
             
             
-        sr.flipX = movement < 0 ? true : false;
+        sr.flipX = inputVector.x < 0 ? true : false;
 
         horizontalMove = Input.GetAxisRaw("Horizontal") * speed;
-        animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
 
-        
+        if (horizontalMove != 0 || 
+            Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.LeftArrow) ||
+            Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.D)) 
+            animator.SetBool("ismoving", true);
+        else
+            animator.SetBool("ismoving", false);
     }
 
+    void ReflectPlayer() 
+    {
+        if (inputVector.x < 0 && faceRight ||
+            inputVector.x > 0 && !faceRight)
+        {
+            Vector3 temp = transform.localScale;
+            temp.x *= -1;
+            transform.localScale = temp;
+
+            faceRight = !faceRight;
+        }
+    }
     void CheckKeyboardInputs()
     {
         if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey("left"))
@@ -120,7 +146,7 @@ public class NewBehaviorScript : MonoBehaviour
     }
     void Detach()
     {
-        hj.connectedBody.gameObject.GetComponent<RopeSegment>().isPlayerAttached=false;
+        hj.connectedBody.gameObject.GetComponent<RopeSegment>().isPlayerAttached = false;
         attached = false;
         hj.enabled= false;
         hj.connectedBody = null;
@@ -167,7 +193,7 @@ public class NewBehaviorScript : MonoBehaviour
         {
             if (col.gameObject.tag == "Rope")
             {
-                if(attachedTo != col.gameObject.transform.parent)
+                if (attachedTo != col.gameObject.transform.parent)
                 {
                     if (disregard == null || col.gameObject.transform.parent.gameObject != disregard)
                     {
