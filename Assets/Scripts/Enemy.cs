@@ -20,7 +20,7 @@ public class Enemy : MonoBehaviour
         GetComponent<BoxCollider2D>().isTrigger = true;
 
         GameObject root = new GameObject(name+"_Root");
-        root.transform.position =transform.position;
+        root.transform.position = transform.position;
         transform.SetParent(root.transform);
         GameObject waypoints = new GameObject("points");
         waypoints.transform.SetParent(root.transform);
@@ -44,10 +44,10 @@ public class Enemy : MonoBehaviour
     void MoveToNextPoint()
     {
         Transform goalPoint = points[nextID];
-        if (goalPoint.transform.position.x > transform.position.x)
-            transform.localScale = new Vector3(6, 6, 1);
-        else
-            transform.localScale = new Vector3(-6, 6, 1);
+        //if (goalPoint.transform.position.x > transform.position.x)
+        //    transform.localScale = new Vector3(6, 6, 1);
+        //else
+        //    transform.localScale = new Vector3(-6, 6, 1);
         transform.position = Vector2.MoveTowards(transform.position,goalPoint.position,speed*Time.deltaTime);
         if (Vector2.Distance(transform.position, goalPoint.position)<1f)
         {
