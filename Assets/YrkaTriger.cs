@@ -1,14 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class Teleport : MonoBehaviour
+public class YrkaTriger : MonoBehaviour
 {
-    public Transform point;
+    public MonoBehaviour script;
 
     public void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.tag == "Player")
-            collision.transform.position = point.transform.position;
+            script.enabled = true;
     }
+
 }
